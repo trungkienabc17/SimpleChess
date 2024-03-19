@@ -32,7 +32,7 @@ public class GamePanel extends JPanel implements Runnable {
 	public static ArrayList<Piece> pieces = new ArrayList<>();
 	public static ArrayList<Piece> simPieces = new ArrayList<>();
 	public static ArrayList<Piece> promoPieces = new ArrayList<>();
-	Piece activeP;
+	Piece activeP, checkingP;
 	public static Piece castlingP;
 
 	// Pieces color
@@ -44,16 +44,18 @@ public class GamePanel extends JPanel implements Runnable {
 	boolean canMove;
 	boolean validSquare;
 	boolean promotion;
+	boolean gameover;
 
 	public GamePanel() {
 
 		setPreferredSize(new Dimension(width, height));
-		setBackground(Color.gray);
+		setBackground(new Color(64, 64, 64));
 		addMouseMotionListener(mouse);
 		addMouseListener(mouse);
 
-		// setPieces();
-		testPromotion();
+		setPieces();
+		// testPromotion();
+		// testIllegal();
 		copyPieces(pieces, simPieces);
 	}
 
@@ -101,10 +103,21 @@ public class GamePanel extends JPanel implements Runnable {
 		pieces.add(new King(black, 4, 0));
 	}
 
+	// TESTING
 	public void testPromotion() {
 		pieces.add(new Pawn(white, 0, 4));
 		pieces.add(new Pawn(black, 4, 4));
 	}
+
+	public void testIllegal() {
+		pieces.add(new Pawn(white, 2, 5));
+		pieces.add(new King(white, 3, 7));
+		pieces.add(new King(black, 0, 3));
+		pieces.add(new Queen(white, 1, 4));
+		pieces.add(new Queen(black, 4, 5));
+	}
+
+	// END TESTING
 
 	public void copyPieces(ArrayList<Piece> source, ArrayList<Piece> target) {
 
@@ -220,14 +233,16 @@ public class GamePanel extends JPanel implements Runnable {
 		if (activeP.canMove(activeP.col, activeP.row)) {
 
 			canMove = true;
-
 			// If captured a piece, remove it from the list
 			if (activeP.hittingP != null) {
 				simPieces.remove(activeP.hittingP.getIndex());
 			}
 
 			checkCastling();
-			validSquare = true;
+
+			if (isIllegal(activeP) == false) {
+				validSquare = true;
+			}
 		}
 	}
 
@@ -240,6 +255,18 @@ public class GamePanel extends JPanel implements Runnable {
 			}
 			castlingP.x = castlingP.getX(castlingP.col);
 		}
+	}
+
+	private boolean isIllegal(Piece king) {
+
+		if (king.type == Type.king) {
+			for (Piece piece : simPieces) {
+				if (piece != king && piece.color != king.color && piece.canMove(king.col, king.row)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private void changePlayer() {
@@ -325,11 +352,20 @@ public class GamePanel extends JPanel implements Runnable {
 		if (activeP != null) {
 
 			if (canMove) {
-				g2.setColor(Color.yellow);
-				g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.7f));
-				g2.fillRect(activeP.col * Board.square_size, activeP.row * Board.square_size, Board.square_size,
-						Board.square_size);
-				g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
+
+				if (isIllegal(activeP)) {
+					g2.setColor(Color.red);
+					g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.7f));
+					g2.fillRect(activeP.col * Board.square_size, activeP.row * Board.square_size, Board.square_size,
+							Board.square_size);
+					g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
+				} else {
+					g2.setColor(Color.white);
+					g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.7f));
+					g2.fillRect(activeP.col * Board.square_size, activeP.row * Board.square_size, Board.square_size,
+							Board.square_size);
+					g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
+				}
 			}
 
 			activeP.draw(g2);

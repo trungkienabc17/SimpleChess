@@ -18,10 +18,10 @@ public class Board {
 			for (int col = 0; col < max_col; col++) {
 
 				if (board_color == 0) {
-					g2.setColor(new Color(238, 238, 210));
+					g2.setColor(new Color(210, 165, 125));
 					board_color = 1;
 				} else {
-					g2.setColor(new Color(118, 150, 86));
+					g2.setColor(new Color(175, 115, 70));
 					board_color = 0;
 				}
 
